@@ -1,0 +1,2 @@
+VOICEVOXを展開したDocker ImageをECRに配置し、そのECRをAWS Lambdaに展開して動作します。
+AWS Lambdaのeventで渡されたTextをwavファイルに変換しS3に配置します。
