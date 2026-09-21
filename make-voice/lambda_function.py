@@ -1,8 +1,11 @@
 import json
 import boto3
-import voicevox_core
-from voicevox_core import AccelerationMode, VoicevoxCore
-from pathlib import Path
+from voicevox_core.blocking import (
+    Onnxruntime,
+    OpenJtalk,
+    Synthesizer,
+    VoiceModelFile,
+)
 import wave
 import os
 import datetime
@@ -10,21 +13,23 @@ import datetime
 s3 = boto3.client('s3')
 bucket = os.environ['BUCKET_NAME']
 
-SPEAKER_ID = 1 # ずんだもん（あまあま）
-                
-open_jtalk_dict_dir = './open_jtalk_dic_utf_8-1.11'
-acceleration_mode = AccelerationMode.AUTO
-core = VoicevoxCore(
-        acceleration_mode=acceleration_mode, open_jtalk_dict_dir=open_jtalk_dict_dir
-    )
-core.load_model(SPEAKER_ID)
+SPEAKER_ID = 47 # ナースロボ＿タイプＴ（ノーマル）
+ONNXRUNTIME_PATH = './lib/onnxruntime/lib/libvoicevox_onnxruntime.so.1.17.3'
+OPEN_JTALK_DICT_DIR = './lib/dict/open_jtalk_dic_utf_8-1.11'
+VVM_PATH = './lib/models/vvms/11.vvm'
+
+onnxruntime = Onnxruntime.load_once(filename=ONNXRUNTIME_PATH)
+open_jtalk = OpenJtalk(OPEN_JTALK_DICT_DIR)
+synthesizer = Synthesizer(onnxruntime, open_jtalk, acceleration_mode="AUTO")
+with VoiceModelFile.open(VVM_PATH) as model:
+    synthesizer.load_voice_model(model)
 
 def handler(event, context):
 
     # リクエストイベントの text として送信されてきた文字列を取得し、音声データに変換する
-    text = event.get('text','テキストが空なのだ')
-    audio_query = core.audio_query(text, SPEAKER_ID)
-    wav = core.synthesis(audio_query, SPEAKER_ID)
+    text = event.get('text','テキストが空です')
+    audio_query = synthesizer.create_audio_query(text, SPEAKER_ID)
+    wav = synthesizer.synthesis(audio_query, SPEAKER_ID)
     key = datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.wav'
 
     # 4. 音声ファイルの長さを取得
