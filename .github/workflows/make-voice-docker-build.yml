@@ -1,0 +1,34 @@
+name: make-voice Docker build
+
+on:
+  pull_request:
+    paths:
+      - "make-voice/Dockerfile"
+      - ".github/workflows/make-voice-docker-build.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image (linux/arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: make-voice
+          file: make-voice/Dockerfile
+          platforms: linux/arm64
+          push: false
+          load: true
+          tags: make-voice:ci
+          build-args: |
+            GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test import
+        run: docker run --rm --entrypoint python make-voice:ci -c "import voicevox_core, awslambdaric, boto3; print('ok')"
