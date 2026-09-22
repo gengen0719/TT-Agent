@@ -1,2 +1,5 @@
 /make-voice/output.wav
 /make-voice/lib/
+/cdk/.venv/
+/cdk/cdk.out/
+__pycache__/
