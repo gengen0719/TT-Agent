@@ -1,6 +1,6 @@
 # cdk
 
-`make-voice` をデプロイする AWS CDK (Python) アプリです。スタック `TtMakeVoiceStack` は以下を作成します。
+`make-voice` をデプロイする AWS CDK (TypeScript) アプリです。スタック `TtMakeVoiceStack` は以下を作成します。
 
 - ECR リポジトリ `voicevox-image`
   - `make-voice/Dockerfile` を linux/arm64 でビルドし、`latest` タグとしてこのリポジトリに push します。`cdk deploy` するたびに Docker image も更新されます。
@@ -16,10 +16,9 @@
 
 ```bash
 cd cdk
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-npx aws-cdk@2 bootstrap   # 初回のみ
-npx aws-cdk@2 deploy
+npm ci
+npx cdk bootstrap   # 初回のみ
+npx cdk deploy
 ```
 
 Docker image のビルドは arm64 で行われるため、arm64 以外のマシンでは `docker buildx` / QEMU (binfmt) のセットアップが必要です。

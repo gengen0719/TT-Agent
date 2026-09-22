@@ -1,8 +1,8 @@
 {
-  "app": "python3 app.py",
+  "app": "npx ts-node --prefer-ts-exts bin/tt-make-voice.ts",
   "watch": {
     "include": ["**"],
-    "exclude": ["README.md", "cdk*.json", "requirements*.txt", "**/__pycache__"]
+    "exclude": ["README.md", "cdk*.json", "**/*.d.ts", "**/*.js", "tsconfig.json", "package*.json", "node_modules"]
   },
   "context": {
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,

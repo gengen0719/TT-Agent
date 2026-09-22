@@ -1,0 +1,25 @@
+{
+  "name": "tt-make-voice-cdk",
+  "version": "0.1.0",
+  "private": true,
+  "bin": {
+    "tt-make-voice": "bin/tt-make-voice.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "aws-cdk": "2.1141.0",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.9.0"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.269.0",
+    "cdk-ecr-deployment": "4.2.64",
+    "constructs": "^10.0.0"
+  }
+}

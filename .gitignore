@@ -1,5 +1,8 @@
 /make-voice/output.wav
 /make-voice/lib/
-/cdk/.venv/
+/cdk/node_modules/
 /cdk/cdk.out/
-__pycache__/
+/cdk/bin/*.js
+/cdk/bin/*.d.ts
+/cdk/lib/*.js
+/cdk/lib/*.d.ts
