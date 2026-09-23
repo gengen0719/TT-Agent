@@ -1,0 +1,20 @@
+{
+  "name": "tt-line-echo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "LINE_CHANNEL_SECRET=test LINE_CHANNEL_ACCESS_TOKEN=test MAKE_VOICE_FUNCTION_ARN=arn:aws:lambda:ap-northeast-1:123456789012:function:tt-make-voice:live VOICE_BUCKET_NAME=test-bucket node --import tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.0.0",
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/s3-request-presigner": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "@types/node": "^24.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "~5.9.0"
+  }
+}

@@ -84,7 +84,13 @@ export class MakeVoiceStack extends Stack {
     });
 
     new CfnOutput(this, 'RepositoryUri', { value: repository.repositoryUri });
-    new CfnOutput(this, 'BucketName', { value: bucket.bucketName });
-    new CfnOutput(this, 'FunctionAliasArn', { value: alias.functionArn });
+    new CfnOutput(this, 'BucketName', {
+      value: bucket.bucketName,
+      exportName: 'TtMakeVoice-BucketName',
+    });
+    new CfnOutput(this, 'FunctionAliasArn', {
+      value: alias.functionArn,
+      exportName: 'TtMakeVoice-FunctionAliasArn',
+    });
   }
 }

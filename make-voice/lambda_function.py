@@ -55,7 +55,9 @@ def handler(event, context):
 
     # 音声ファイルの長さをレスポンスする
     response = {
-            'Audio-Length': audio_length
+            'Audio-Length': audio_length,
+            'bucket': bucket,
+            'key': key
         }
 
     return {

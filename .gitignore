@@ -6,3 +6,5 @@
 /cdk/bin/*.d.ts
 /cdk/lib/*.js
 /cdk/lib/*.d.ts
+/line-echo/node_modules/
+/line-echo/dist/
