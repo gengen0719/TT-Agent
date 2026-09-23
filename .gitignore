@@ -1,2 +1,8 @@
 /make-voice/output.wav
 /make-voice/lib/
+/cdk/node_modules/
+/cdk/cdk.out/
+/cdk/bin/*.js
+/cdk/bin/*.d.ts
+/cdk/lib/*.js
+/cdk/lib/*.d.ts
