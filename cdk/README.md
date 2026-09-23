@@ -26,3 +26,18 @@ Docker image のビルドは arm64 で行われるため、arm64 以外のマシ
 ```bash
 docker run --privileged --rm tonistiigi/binfmt --install arm64
 ```
+
+## TtLineEchoStack
+
+`line-echo` をデプロイするスタックです。LINE Messaging API の Webhook 用 Lambda 関数 `tt-line-echo` と、その公開エンドポイントとなる Lambda Function URL (認証なし、署名検証はコード内で実施) を作成します。受け取ったテキストメッセージをオウム返しし、`tt-make-voice` で生成した音声も音声メッセージとして返信します。
+
+前提: `TtMakeVoiceStack` がデプロイ済みであること。`TtMakeVoice-BucketName` / `TtMakeVoice-FunctionAliasArn` の export を使ってリソースを参照するため、export 追加後の `TtMakeVoiceStack` を一度再デプロイしてください。
+
+```bash
+cd cdk
+LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineEchoStack
+```
+
+(`LINE_CHANNEL_*` の代わりに `-c lineChannelSecret=... -c lineChannelAccessToken=...` の context 指定も可)
+
+デプロイ後、出力 `WebhookUrl` の値を LINE Developers コンソールの Webhook URL に設定してください。
