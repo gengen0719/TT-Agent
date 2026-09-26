@@ -8,3 +8,5 @@
 /cdk/lib/*.d.ts
 /line-echo/node_modules/
 /line-echo/dist/
+/line-register/node_modules/
+/line-register/dist/

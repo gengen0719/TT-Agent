@@ -2,6 +2,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { MakeVoiceStack } from '../lib/make-voice-stack';
 import { LineEchoStack } from '../lib/line-echo-stack';
+import { LineRegisterStack } from '../lib/line-register-stack';
 
 const app = new cdk.App();
 const env = {
@@ -17,12 +18,19 @@ const lineChannelAccessToken =
   process.env.LINE_CHANNEL_ACCESS_TOKEN ?? app.node.tryGetContext('lineChannelAccessToken') ?? '';
 if (!lineChannelSecret || !lineChannelAccessToken) {
   console.warn(
-    'LINE_CHANNEL_SECRET / LINE_CHANNEL_ACCESS_TOKEN are not set; TtLineEchoStack synthesis will fail. ' +
+    'LINE_CHANNEL_SECRET / LINE_CHANNEL_ACCESS_TOKEN are not set; ' +
+      'TtLineEchoStack and TtLineRegisterStack synthesis will fail. ' +
       'Set them as environment variables or via -c lineChannelSecret=... -c lineChannelAccessToken=...',
   );
 }
 
 new LineEchoStack(app, 'TtLineEchoStack', {
+  env,
+  lineChannelSecret,
+  lineChannelAccessToken,
+});
+
+new LineRegisterStack(app, 'TtLineRegisterStack', {
   env,
   lineChannelSecret,
   lineChannelAccessToken,
