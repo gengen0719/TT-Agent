@@ -41,3 +41,18 @@ LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineEchoS
 (`LINE_CHANNEL_*` の代わりに `-c lineChannelSecret=... -c lineChannelAccessToken=...` の context 指定も可)
 
 デプロイ後、出力 `WebhookUrl` の値を LINE Developers コンソールの Webhook URL に設定してください。
+
+## TtLineRegisterStack
+
+`line-register` をデプロイするスタックです。LINE Messaging API の Webhook 用 Lambda 関数 `tt-line-register`、その公開エンドポイントとなる Lambda Function URL (認証なし、署名検証はコード内で実施)、およびユーザー情報を保存する DynamoDB テーブル `LINE_Users` (パーティションキー `userId`、オンデマンド課金、削除時は保持) を作成します。`follow` イベントを受け取るとユーザーの `userId` と `displayName` をテーブルに保存します。
+
+```bash
+cd cdk
+LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineRegisterStack
+```
+
+(`LINE_CHANNEL_*` の代わりに `-c lineChannelSecret=... -c lineChannelAccessToken=...` の context 指定も可)
+
+デプロイ後、出力 `WebhookUrl` の値を LINE Developers コンソールの Webhook URL に設定してください。
+
+注意: LINE Messaging API では 1 チャネルにつき Webhook URL は 1 つなので、`TtLineEchoStack` (tt-line-echo) と同時に使う場合は別チャネルにするか Webhook URL を切り替える必要があります。
