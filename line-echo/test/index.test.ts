@@ -2,7 +2,13 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { describe, it } from 'node:test';
 import type { APIGatewayProxyEventV2 } from 'aws-lambda';
-import { handler, parseMakeVoiceResponse, verifySignature } from '../src/index';
+import {
+  buildUserItem,
+  classifyLineEvent,
+  handler,
+  parseMakeVoiceResponse,
+  verifySignature,
+} from '../src/index';
 
 const SECRET = 'test-channel-secret';
 
@@ -62,6 +68,57 @@ describe('parseMakeVoiceResponse', () => {
 
   it('throws on empty payload', () => {
     assert.throws(() => parseMakeVoiceResponse(undefined));
+  });
+});
+
+describe('classifyLineEvent', () => {
+  it('routes follow events with a user ID to registration', () => {
+    assert.equal(classifyLineEvent({ type: 'follow', source: { userId: 'U123' } }), 'follow');
+  });
+
+  it('routes text messages with a reply token to echo handling', () => {
+    assert.equal(
+      classifyLineEvent({
+        type: 'message',
+        replyToken: 'reply-token',
+        message: { type: 'text', text: 'hello' },
+      }),
+      'text-message',
+    );
+  });
+
+  it('ignores verification and unsupported events', () => {
+    assert.equal(
+      classifyLineEvent({
+        type: 'message',
+        replyToken: '00000000000000000000000000000000',
+        message: { type: 'text', text: 'hello' },
+      }),
+      'ignore',
+    );
+    assert.equal(classifyLineEvent({ type: 'unfollow' }), 'ignore');
+  });
+});
+
+describe('buildUserItem', () => {
+  it('builds a user record from a follow event', () => {
+    assert.deepEqual(
+      buildUserItem({ type: 'follow', timestamp: 1700000000000, source: { userId: 'U123' } }, 'Taro'),
+      {
+        userId: 'U123',
+        displayName: 'Taro',
+        timestamp: 1700000000000,
+        followedAt: '2023-11-14T22:13:20.000Z',
+      },
+    );
+  });
+
+  it('uses an empty user ID and current time when event fields are missing', () => {
+    const item = buildUserItem({ type: 'follow' }, 'Unknown');
+    assert.equal(item.userId, '');
+    assert.equal(item.displayName, 'Unknown');
+    assert.equal(typeof item.timestamp, 'number');
+    assert.equal(item.followedAt, new Date(item.timestamp).toISOString());
   });
 });
 

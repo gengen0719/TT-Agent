@@ -19,19 +19,18 @@ const lineChannelAccessToken =
 if (!lineChannelSecret || !lineChannelAccessToken) {
   console.warn(
     'LINE_CHANNEL_SECRET / LINE_CHANNEL_ACCESS_TOKEN are not set; ' +
-      'TtLineEchoStack and TtLineRegisterStack synthesis will fail. ' +
+      'TtLineEchoStack synthesis will fail. ' +
       'Set them as environment variables or via -c lineChannelSecret=... -c lineChannelAccessToken=...',
   );
 }
+
+const lineRegisterStack = new LineRegisterStack(app, 'TtLineRegisterStack', {
+  env,
+});
 
 new LineEchoStack(app, 'TtLineEchoStack', {
   env,
   lineChannelSecret,
   lineChannelAccessToken,
-});
-
-new LineRegisterStack(app, 'TtLineRegisterStack', {
-  env,
-  lineChannelSecret,
-  lineChannelAccessToken,
+  lineUsersTable: lineRegisterStack.table,
 });

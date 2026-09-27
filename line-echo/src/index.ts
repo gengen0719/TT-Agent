@@ -3,6 +3,8 @@ import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda
 import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 
 function requiredEnv(name: string): string {
   const value = process.env[name];
@@ -16,13 +18,33 @@ const LINE_CHANNEL_SECRET = requiredEnv('LINE_CHANNEL_SECRET');
 const LINE_CHANNEL_ACCESS_TOKEN = requiredEnv('LINE_CHANNEL_ACCESS_TOKEN');
 const MAKE_VOICE_FUNCTION_ARN = requiredEnv('MAKE_VOICE_FUNCTION_ARN');
 const VOICE_BUCKET_NAME = requiredEnv('VOICE_BUCKET_NAME');
+const LINE_USERS_TABLE_NAME = requiredEnv('LINE_USERS_TABLE_NAME');
 
 const lambdaClient = new LambdaClient({});
 const s3Client = new S3Client({});
+const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 const LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply';
 const VERIFICATION_REPLY_TOKEN = '00000000000000000000000000000000';
 const PRESIGNED_URL_EXPIRES_IN = 300;
+
+export type LineEventRoute = 'follow' | 'text-message' | 'ignore';
+
+export function classifyLineEvent(event: LineEvent): LineEventRoute {
+  if (event.type === 'follow' && event.source?.userId) {
+    return 'follow';
+  }
+  if (
+    event.type === 'message' &&
+    event.message?.type === 'text' &&
+    typeof event.message.text === 'string' &&
+    event.replyToken &&
+    event.replyToken !== VERIFICATION_REPLY_TOKEN
+  ) {
+    return 'text-message';
+  }
+  return 'ignore';
+}
 
 export function verifySignature(rawBody: string, signature: string | undefined, secret: string): boolean {
   if (!signature) {
@@ -64,15 +86,36 @@ interface LineMessage {
   text?: string;
 }
 
-interface LineEvent {
+export interface LineEvent {
   type: string;
+  timestamp?: number;
   replyToken?: string;
   message?: LineMessage;
+  source?: {
+    userId?: string;
+  };
 }
 
 interface LineWebhookBody {
   destination?: string;
   events?: LineEvent[];
+}
+
+export interface UserItem {
+  userId: string;
+  displayName: string;
+  timestamp: number;
+  followedAt: string;
+}
+
+export function buildUserItem(event: LineEvent, displayName: string): UserItem {
+  const timestamp = event.timestamp ?? Date.now();
+  return {
+    userId: event.source?.userId ?? '',
+    displayName,
+    timestamp,
+    followedAt: new Date(timestamp).toISOString(),
+  };
 }
 
 async function makeVoice(text: string): Promise<MakeVoiceResult> {
@@ -111,6 +154,23 @@ async function replyToLine(replyToken: string, messages: Record<string, unknown>
   }
 }
 
+async function fetchDisplayName(userId: string): Promise<string> {
+  try {
+    const res = await fetch(`https://api.line.me/v2/bot/profile/${userId}`, {
+      headers: { Authorization: `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}` },
+    });
+    if (!res.ok) {
+      console.error(`LINE profile API returned ${res.status}: ${await res.text()}`);
+      return 'Unknown';
+    }
+    const profile = (await res.json()) as { displayName?: string };
+    return profile.displayName ?? 'Unknown';
+  } catch (error) {
+    console.error('failed to fetch LINE profile', error);
+    return 'Unknown';
+  }
+}
+
 async function handleTextMessage(replyToken: string, text: string): Promise<void> {
   const messages: Record<string, unknown>[] = [{ type: 'text', text }];
   try {
@@ -124,16 +184,20 @@ async function handleTextMessage(replyToken: string, text: string): Promise<void
 }
 
 async function handleEvent(event: LineEvent): Promise<void> {
-  if (
-    event.type === 'message' &&
-    event.message?.type === 'text' &&
-    typeof event.message.text === 'string' &&
-    event.replyToken &&
-    event.replyToken !== VERIFICATION_REPLY_TOKEN
-  ) {
-    await handleTextMessage(event.replyToken, event.message.text);
-  } else {
-    console.log(`ignoring event: type=${event.type} messageType=${event.message?.type}`);
+  switch (classifyLineEvent(event)) {
+    case 'follow': {
+      const userId = event.source!.userId!;
+      const displayName = await fetchDisplayName(userId);
+      const item = buildUserItem(event, displayName);
+      await docClient.send(new PutCommand({ TableName: LINE_USERS_TABLE_NAME, Item: item }));
+      console.log(`Saved userId: ${item.userId} displayName: ${item.displayName}`);
+      return;
+    }
+    case 'text-message':
+      await handleTextMessage(event.replyToken!, event.message!.text!);
+      return;
+    case 'ignore':
+      console.log(`ignoring event: type=${event.type} messageType=${event.message?.type}`);
   }
 }
 

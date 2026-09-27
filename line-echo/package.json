@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "build": "tsc --noEmit",
-    "test": "LINE_CHANNEL_SECRET=test LINE_CHANNEL_ACCESS_TOKEN=test MAKE_VOICE_FUNCTION_ARN=arn:aws:lambda:ap-northeast-1:123456789012:function:tt-make-voice:live VOICE_BUCKET_NAME=test-bucket node --import tsx --test test/*.test.ts"
+    "test": "LINE_CHANNEL_SECRET=test LINE_CHANNEL_ACCESS_TOKEN=test MAKE_VOICE_FUNCTION_ARN=arn:aws:lambda:ap-northeast-1:123456789012:function:tt-make-voice:live VOICE_BUCKET_NAME=test-bucket LINE_USERS_TABLE_NAME=LINE_Users node --import tsx --test test/*.test.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
     "@aws-sdk/client-lambda": "^3.0.0",
     "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
     "@aws-sdk/s3-request-presigner": "^3.0.0"
   },
   "devDependencies": {

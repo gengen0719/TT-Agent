@@ -29,13 +29,13 @@ docker run --privileged --rm tonistiigi/binfmt --install arm64
 
 ## TtLineEchoStack
 
-`line-echo` をデプロイするスタックです。LINE Messaging API の Webhook 用 Lambda 関数 `tt-line-echo` と、その公開エンドポイントとなる Lambda Function URL (認証なし、署名検証はコード内で実施) を作成します。受け取ったテキストメッセージをオウム返しし、`tt-make-voice` で生成した音声も音声メッセージとして返信します。
+LINE Messaging API の Webhook 用 Lambda 関数 `tt-line-echo` と、その公開エンドポイントとなる Lambda Function URL (認証なし、署名検証はコード内で実施) を作成します。受け取ったテキストメッセージをオウム返しし、`tt-make-voice` で生成した音声も音声メッセージとして返信します。`follow` イベントではプロフィールを取得し、友だち情報を `LINE_Users` テーブルに保存します。
 
 前提: `TtMakeVoiceStack` がデプロイ済みであること。`TtMakeVoice-BucketName` / `TtMakeVoice-FunctionAliasArn` の export を使ってリソースを参照するため、export 追加後の `TtMakeVoiceStack` を一度再デプロイしてください。
 
 ```bash
 cd cdk
-LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineEchoStack
+LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineRegisterStack TtLineEchoStack
 ```
 
 (`LINE_CHANNEL_*` の代わりに `-c lineChannelSecret=... -c lineChannelAccessToken=...` の context 指定も可)
@@ -44,15 +44,15 @@ LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineEchoS
 
 ## TtLineRegisterStack
 
-`line-register` をデプロイするスタックです。LINE Messaging API の Webhook 用 Lambda 関数 `tt-line-register`、その公開エンドポイントとなる Lambda Function URL (認証なし、署名検証はコード内で実施)、およびユーザー情報を保存する DynamoDB テーブル `LINE_Users` (パーティションキー `userId`、オンデマンド課金、削除時は保持) を作成します。`follow` イベントを受け取るとユーザーの `userId` と `displayName` をテーブルに保存します。
+ユーザー情報を保存する DynamoDB テーブル `LINE_Users` (パーティションキー `userId`、オンデマンド課金、削除時は保持) を作成します。このテーブルは `TtLineEchoStack` の統合 Webhook Lambda から使用します。
 
 ```bash
 cd cdk
-LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineRegisterStack
+LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineRegisterStack TtLineEchoStack
 ```
 
 (`LINE_CHANNEL_*` の代わりに `-c lineChannelSecret=... -c lineChannelAccessToken=...` の context 指定も可)
 
-デプロイ後、出力 `WebhookUrl` の値を LINE Developers コンソールの Webhook URL に設定してください。
+デプロイ後、`TtLineEchoStack` の出力 `WebhookUrl` を LINE Developers コンソールの Webhook URL に設定してください。
 
-注意: LINE Messaging API では 1 チャネルにつき Webhook URL は 1 つなので、`TtLineEchoStack` (tt-line-echo) と同時に使う場合は別チャネルにするか Webhook URL を切り替える必要があります。
+Webhook URL は統合前から `TtLineEchoStack` の値を維持します。以前の `TtLineRegisterStack` による Lambda Function URL は不要になります。
