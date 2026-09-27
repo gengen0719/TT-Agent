@@ -1,6 +1,6 @@
 # line-echo
 
-LINE Messaging API の Webhook から届いたテキストメッセージをオウム返しする Lambda 関数です。
+LINE Messaging API の Webhook を受け付け、イベント内容に応じて処理する Lambda 関数です。`follow` イベントではユーザー情報を DynamoDB に保存します。
 テキストのオウム返しに加えて、`tt-make-voice` Lambda (VOICEVOX) で生成した音声ファイルを
 S3 署名付き URL 経由で音声メッセージとしても返信します。
 
@@ -12,6 +12,7 @@ S3 署名付き URL 経由で音声メッセージとしても返信します。
 | `LINE_CHANNEL_ACCESS_TOKEN` | LINE チャネルアクセストークン (返信 API に使用) |
 | `MAKE_VOICE_FUNCTION_ARN` | `tt-make-voice` の呼び出し対象 ARN (エイリアス `live` 推奨) |
 | `VOICE_BUCKET_NAME` | 生成音声が保存される S3 バケット名 |
+| `LINE_USERS_TABLE_NAME` | `follow` イベントのユーザー情報を保存する DynamoDB テーブル名 |
 
 ## デプロイと Webhook 設定
 
@@ -20,7 +21,7 @@ S3 署名付き URL 経由で音声メッセージとしても返信します。
 
 ```bash
 cd cdk
-LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineEchoStack
+LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineRegisterStack TtLineEchoStack
 ```
 
 デプロイ後、スタック出力の `WebhookUrl` (Lambda Function URL) を

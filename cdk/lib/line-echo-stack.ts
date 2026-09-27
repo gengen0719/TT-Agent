@@ -6,6 +6,7 @@ import {
   Fn,
   Stack,
   StackProps,
+  aws_dynamodb as dynamodb,
   aws_iam as iam,
   aws_lambda as lambda,
   aws_lambda_nodejs as nodejs,
@@ -17,6 +18,7 @@ const LINE_ECHO_DIR = path.join(__dirname, '..', '..', 'line-echo');
 export interface LineEchoStackProps extends StackProps {
   lineChannelSecret: string;
   lineChannelAccessToken: string;
+  lineUsersTable: dynamodb.ITable;
 }
 
 export class LineEchoStack extends Stack {
@@ -47,6 +49,7 @@ export class LineEchoStack extends Stack {
         LINE_CHANNEL_ACCESS_TOKEN: props.lineChannelAccessToken,
         MAKE_VOICE_FUNCTION_ARN: makeVoiceFunctionArn,
         VOICE_BUCKET_NAME: voiceBucketName,
+        LINE_USERS_TABLE_NAME: props.lineUsersTable.tableName,
       },
       bundling: {
         minify: true,
@@ -62,6 +65,7 @@ export class LineEchoStack extends Stack {
         resources: [makeVoiceFunctionArn],
       }),
     );
+    props.lineUsersTable.grantWriteData(fn);
     fn.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ['s3:GetObject'],
