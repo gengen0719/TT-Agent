@@ -21,8 +21,10 @@ S3 署名付き URL 経由で音声メッセージとしても返信します。
 
 ```bash
 cd cdk
-LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineRegisterStack TtLineEchoStack
+LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineEchoStack
 ```
+
+`LINE_Users` は `TtLineEchoStack` が作成します。既存環境で `TtLineRegisterStack` がこのテーブルを管理している場合、スタック間での CloudFormation リソース所有権の移行が必要です。そのまま新スタックをデプロイすると、既存テーブル名と衝突します。
 
 デプロイ後、スタック出力の `WebhookUrl` (Lambda Function URL) を
 LINE Developers コンソールの Webhook URL に設定してください。

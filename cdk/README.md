@@ -35,24 +35,11 @@ LINE Messaging API の Webhook 用 Lambda 関数 `tt-line-echo` と、その公�
 
 ```bash
 cd cdk
-LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineRegisterStack TtLineEchoStack
+LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineEchoStack
 ```
 
 (`LINE_CHANNEL_*` の代わりに `-c lineChannelSecret=... -c lineChannelAccessToken=...` の context 指定も可)
 
 デプロイ後、出力 `WebhookUrl` の値を LINE Developers コンソールの Webhook URL に設定してください。
 
-## TtLineRegisterStack
-
-ユーザー情報を保存する DynamoDB テーブル `LINE_Users` (パーティションキー `userId`、オンデマンド課金、削除時は保持) を作成します。このテーブルは `TtLineEchoStack` の統合 Webhook Lambda から使用します。
-
-```bash
-cd cdk
-LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineRegisterStack TtLineEchoStack
-```
-
-(`LINE_CHANNEL_*` の代わりに `-c lineChannelSecret=... -c lineChannelAccessToken=...` の context 指定も可)
-
-デプロイ後、`TtLineEchoStack` の出力 `WebhookUrl` を LINE Developers コンソールの Webhook URL に設定してください。
-
-Webhook URL は統合前から `TtLineEchoStack` の値を維持します。以前の `TtLineRegisterStack` による Lambda Function URL は不要になります。
+`TtLineEchoStack` はユーザー情報を保存する DynamoDB テーブル `LINE_Users` (パーティションキー `userId`、オンデマンド課金、削除時は保持) も作成し、Webhook Lambda から使用します。
