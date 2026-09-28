@@ -7,6 +7,8 @@ import {
   RemovalPolicy,
   Stack,
   StackProps,
+  aws_apigatewayv2 as apigatewayv2,
+  aws_apigatewayv2_integrations as apigatewayv2Integrations,
   aws_dynamodb as dynamodb,
   aws_iam as iam,
   aws_lambda as lambda,
@@ -80,11 +82,15 @@ export class LineEchoStack extends Stack {
       }),
     );
 
-    const url = fn.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.NONE,
+    const api = new apigatewayv2.HttpApi(this, 'LineEchoApi', {
+      apiName: 'tt-line-echo',
+      defaultIntegration: new apigatewayv2Integrations.HttpLambdaIntegration(
+        'LineEchoIntegration',
+        fn,
+      ),
     });
 
-    new CfnOutput(this, 'WebhookUrl', { value: url.url });
+    new CfnOutput(this, 'WebhookUrl', { value: api.url! });
     new CfnOutput(this, 'FunctionName', { value: fn.functionName });
     new CfnOutput(this, 'TableName', { value: lineUsersTable.tableName });
   }

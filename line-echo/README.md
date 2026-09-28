@@ -26,5 +26,5 @@ LINE_CHANNEL_SECRET=... LINE_CHANNEL_ACCESS_TOKEN=... npx cdk deploy TtLineEchoS
 
 `LINE_Users` は `TtLineEchoStack` が作成します。既存環境で `TtLineRegisterStack` がこのテーブルを管理している場合、スタック間での CloudFormation リソース所有権の移行が必要です。そのまま新スタックをデプロイすると、既存テーブル名と衝突します。
 
-デプロイ後、スタック出力の `WebhookUrl` (Lambda Function URL) を
+デプロイ後、スタック出力の `WebhookUrl` (API Gateway HTTP API URL) を
 LINE Developers コンソールの Webhook URL に設定してください。
