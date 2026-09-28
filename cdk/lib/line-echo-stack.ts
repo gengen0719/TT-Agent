@@ -1,6 +1,5 @@
 import * as path from 'path';
 import {
-  Annotations,
   CfnOutput,
   Duration,
   Fn,
@@ -17,16 +16,16 @@ import { Construct } from 'constructs';
 const LINE_ECHO_DIR = path.join(__dirname, '..', '..', 'line-echo');
 
 export interface LineEchoStackProps extends StackProps {
-  lineChannelSecret: string;
-  lineChannelAccessToken: string;
 }
+
+const LINE_CREDENTIAL_PLACEHOLDER = 'REPLACE_IN_LAMBDA_CONSOLE';
 
 export class LineEchoStack extends Stack {
   constructor(scope: Construct, id: string, props: LineEchoStackProps) {
     super(scope, id, props);
 
     const lineUsersTable = new dynamodb.Table(this, 'LineUsersTable', {
-      tableName: 'LINE_Users',
+      tableName: 'TtLineUsers',
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.RETAIN,
@@ -34,13 +33,6 @@ export class LineEchoStack extends Stack {
 
     const makeVoiceFunctionArn = Fn.importValue('TtMakeVoice-FunctionAliasArn');
     const voiceBucketName = Fn.importValue('TtMakeVoice-BucketName');
-
-    if (!props.lineChannelSecret || !props.lineChannelAccessToken) {
-      Annotations.of(this).addError(
-        'lineChannelSecret and lineChannelAccessToken must be provided ' +
-          '(LINE_CHANNEL_SECRET / LINE_CHANNEL_ACCESS_TOKEN env vars or context).',
-      );
-    }
 
     const fn = new nodejs.NodejsFunction(this, 'LineEchoFunction', {
       entry: path.join(LINE_ECHO_DIR, 'src', 'index.ts'),
@@ -52,8 +44,8 @@ export class LineEchoStack extends Stack {
       timeout: Duration.seconds(60),
       memorySize: 512,
       environment: {
-        LINE_CHANNEL_SECRET: props.lineChannelSecret,
-        LINE_CHANNEL_ACCESS_TOKEN: props.lineChannelAccessToken,
+        LINE_CHANNEL_SECRET: LINE_CREDENTIAL_PLACEHOLDER,
+        LINE_CHANNEL_ACCESS_TOKEN: LINE_CREDENTIAL_PLACEHOLDER,
         MAKE_VOICE_FUNCTION_ARN: makeVoiceFunctionArn,
         VOICE_BUCKET_NAME: voiceBucketName,
         LINE_USERS_TABLE_NAME: lineUsersTable.tableName,
