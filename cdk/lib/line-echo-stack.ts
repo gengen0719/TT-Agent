@@ -4,6 +4,7 @@ import {
   CfnOutput,
   Duration,
   Fn,
+  RemovalPolicy,
   Stack,
   StackProps,
   aws_dynamodb as dynamodb,
@@ -18,12 +19,18 @@ const LINE_ECHO_DIR = path.join(__dirname, '..', '..', 'line-echo');
 export interface LineEchoStackProps extends StackProps {
   lineChannelSecret: string;
   lineChannelAccessToken: string;
-  lineUsersTable: dynamodb.ITable;
 }
 
 export class LineEchoStack extends Stack {
   constructor(scope: Construct, id: string, props: LineEchoStackProps) {
     super(scope, id, props);
+
+    const lineUsersTable = new dynamodb.Table(this, 'LineUsersTable', {
+      tableName: 'LINE_Users',
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
 
     const makeVoiceFunctionArn = Fn.importValue('TtMakeVoice-FunctionAliasArn');
     const voiceBucketName = Fn.importValue('TtMakeVoice-BucketName');
@@ -49,7 +56,7 @@ export class LineEchoStack extends Stack {
         LINE_CHANNEL_ACCESS_TOKEN: props.lineChannelAccessToken,
         MAKE_VOICE_FUNCTION_ARN: makeVoiceFunctionArn,
         VOICE_BUCKET_NAME: voiceBucketName,
-        LINE_USERS_TABLE_NAME: props.lineUsersTable.tableName,
+        LINE_USERS_TABLE_NAME: lineUsersTable.tableName,
       },
       bundling: {
         minify: true,
@@ -65,7 +72,7 @@ export class LineEchoStack extends Stack {
         resources: [makeVoiceFunctionArn],
       }),
     );
-    props.lineUsersTable.grantWriteData(fn);
+    lineUsersTable.grantWriteData(fn);
     fn.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ['s3:GetObject'],
@@ -79,5 +86,6 @@ export class LineEchoStack extends Stack {
 
     new CfnOutput(this, 'WebhookUrl', { value: url.url });
     new CfnOutput(this, 'FunctionName', { value: fn.functionName });
+    new CfnOutput(this, 'TableName', { value: lineUsersTable.tableName });
   }
 }

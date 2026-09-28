@@ -2,7 +2,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { MakeVoiceStack } from '../lib/make-voice-stack';
 import { LineEchoStack } from '../lib/line-echo-stack';
-import { LineRegisterStack } from '../lib/line-register-stack';
 
 const app = new cdk.App();
 const env = {
@@ -24,13 +23,8 @@ if (!lineChannelSecret || !lineChannelAccessToken) {
   );
 }
 
-const lineRegisterStack = new LineRegisterStack(app, 'TtLineRegisterStack', {
-  env,
-});
-
 new LineEchoStack(app, 'TtLineEchoStack', {
   env,
   lineChannelSecret,
   lineChannelAccessToken,
-  lineUsersTable: lineRegisterStack.table,
 });
