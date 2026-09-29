@@ -40,6 +40,6 @@ npx cdk deploy TtLineEchoStack
 
 デプロイ後、AWS マネジメントコンソールで Lambda `tt-line-echo` を開き、Configuration > Environment variables から `LINE_CHANNEL_SECRET` と `LINE_CHANNEL_ACCESS_TOKEN` を実際の値に更新してください。デプロイ時点では両方とも `REPLACE_IN_LAMBDA_CONSOLE` が設定されています。CDK で Lambda の環境変数を更新する変更を再デプロイすると、このプレースホルダーに戻る可能性があるため、その場合はコンソールで再設定してください。
 
-デプロイ後、出力 `WebhookUrl` の値を LINE Developers コンソールの Webhook URL に設定してください。
+デプロイ後、出力 `WebhookUrl` (API Gateway HTTP API) の値を LINE Developers コンソールの Webhook URL に設定してください。
 
 `TtLineEchoStack` はユーザー情報を保存する DynamoDB テーブル `TtLineUsers` (パーティションキー `userId`、オンデマンド課金、削除時は保持) も作成し、Webhook Lambda から使用します。既存の `LINE_Users` テーブルは保持され、新しいテーブルへデータは自動移行されません。

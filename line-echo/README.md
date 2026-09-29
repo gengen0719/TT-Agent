@@ -28,5 +28,5 @@ npx cdk deploy TtLineEchoStack
 
 `TtLineUsers` は `TtLineEchoStack` が作成します。既存の `LINE_Users` テーブルは保持されますが、データは `TtLineUsers` に自動移行されません。既存データが必要な場合は、別途移行してください。
 
-デプロイ後、スタック出力の `WebhookUrl` (Lambda Function URL) を
+デプロイ後、スタック出力の `WebhookUrl` (API Gateway HTTP API URL) を
 LINE Developers コンソールの Webhook URL に設定してください。
