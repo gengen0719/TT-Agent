@@ -43,3 +43,16 @@ npx cdk deploy TtLineEchoStack
 デプロイ後、出力 `WebhookUrl` (API Gateway HTTP API) の値を LINE Developers コンソールの Webhook URL に設定してください。
 
 `TtLineEchoStack` はユーザー情報を保存する DynamoDB テーブル `TtLineUsers` (パーティションキー `userId`、オンデマンド課金、削除時は保持) も作成し、Webhook Lambda から使用します。既存の `LINE_Users` テーブルは保持され、新しいテーブルへデータは自動移行されません。
+
+## TtLineChatStack
+
+Strands Agents Framework と Amazon Bedrock を使ってLINEのテキストメッセージに雑談応答するWebhookを作成します。応答は短いテキストと`make-voice`で生成した音声メッセージで返します。長文は音声生成前に100文字以内へ収めます。`follow`イベントの友だち情報は専用のDynamoDBテーブル `TtAgentLineUsers` に保存します。既存の`TtLineUsers`とは別テーブルです。
+
+```bash
+cd cdk
+npx cdk deploy TtLineChatStack
+```
+
+前提: `TtMakeVoiceStack`を先にデプロイし、音声LambdaとS3バケットのexportが存在すること。
+
+Lambda `tt-line-chat` の`LINE_CHANNEL_SECRET`と`LINE_CHANNEL_ACCESS_TOKEN`を実際の値に更新し、スタック出力の`WebhookUrl`をLINE Developersコンソールに設定してください。初期モデルは`amazon.nova-micro-v1:0`です。実行ロールには同じAWSリージョン内のBedrock基盤モデルを呼び出す権限が付与されます。モデルの利用可能化や利用条件の承認が必要な場合は、Bedrockコンソールで事前に設定してください。
