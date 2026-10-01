@@ -73,7 +73,6 @@ export class MakeVoiceStack extends Stack {
       memorySize: 3000,
       timeout: Duration.minutes(1),
       environment: { BUCKET_NAME: bucket.bucketName },
-      snapStart: lambda.SnapStartConf.ON_PUBLISHED_VERSIONS,
     });
     bucket.grantPut(fn);
     fn.node.addDependency(imagePush);
