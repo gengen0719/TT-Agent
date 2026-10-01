@@ -23,8 +23,8 @@ export class LineChatStack extends Stack {
   constructor(scope: Construct, id: string, props: LineChatStackProps) {
     super(scope, id, props);
 
-    const lineUsersTable = new dynamodb.Table(this, 'LineUsersTable', {
-      tableName: 'TtAgentLineUsers',
+    const lineUsersTable = new dynamodb.Table(this, 'TtLineChatUsersTable', {
+      tableName: 'TtAgTtLineChatUsersTableentLineUsers',
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.RETAIN,
