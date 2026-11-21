@@ -3,6 +3,7 @@ import io
 import json
 import os
 import subprocess
+import tempfile
 import uuid
 import wave
 
@@ -35,22 +36,25 @@ def handler(event, context):
     with wave.open(io.BytesIO(wav), mode='rb') as audio:
         audio_length = audio.getnframes() * 1000 // audio.getframerate()
 
-    mp3 = subprocess.run(
-        ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-f', 'wav', '-i', 'pipe:0',
-         '-c:a', 'libmp3lame', '-b:a', '64k', '-f', 'mp3', 'pipe:1'],
-        input=wav,
-        stdout=subprocess.PIPE,
-        check=True,
-    ).stdout
     timestamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')
     key = f'{timestamp}-{uuid.uuid4().hex}.mp3'
-    s3.put_object(
-        Bucket=bucket,
-        Body=mp3,
-        Key=key,
-        ContentType='audio/mpeg',
-        Metadata={'duration': str(audio_length)},
-    )
+    with tempfile.TemporaryDirectory(dir='/tmp') as directory:
+        mp3_path = os.path.join(directory, 'voice.mp3')
+        # FFmpeg needs seekable output to write the encoder delay and padding.
+        subprocess.run(
+            ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-f', 'wav', '-i', 'pipe:0',
+             '-c:a', 'libmp3lame', '-b:a', '64k', '-f', 'mp3', mp3_path],
+            input=wav,
+            check=True,
+        )
+        with open(mp3_path, 'rb') as mp3:
+            s3.put_object(
+                Bucket=bucket,
+                Body=mp3,
+                Key=key,
+                ContentType='audio/mpeg',
+                Metadata={'duration': str(audio_length)},
+            )
 
     response = {
         'Audio-Length': audio_length,
