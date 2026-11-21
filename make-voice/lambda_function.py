@@ -1,4 +1,11 @@
+import datetime
+import io
 import json
+import os
+import subprocess
+import uuid
+import wave
+
 import boto3
 from voicevox_core.blocking import (
     Onnxruntime,
@@ -6,9 +13,6 @@ from voicevox_core.blocking import (
     Synthesizer,
     VoiceModelFile,
 )
-import wave
-import os
-import datetime
 
 s3 = boto3.client('s3')
 bucket = os.environ['BUCKET_NAME']
@@ -25,40 +29,34 @@ with VoiceModelFile.open(VVM_PATH) as model:
     synthesizer.load_voice_model(model)
 
 def handler(event, context):
-
-    # リクエストイベントの text として送信されてきた文字列を取得し、音声データに変換する
-    text = event.get('text','テキストが空です')
+    text = event.get('text', 'テキストが空です')
     audio_query = synthesizer.create_audio_query(text, SPEAKER_ID)
     wav = synthesizer.synthesis(audio_query, SPEAKER_ID)
-    key = datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.wav'
+    with wave.open(io.BytesIO(wav), mode='rb') as audio:
+        audio_length = audio.getnframes() * 1000 // audio.getframerate()
 
-    # 4. 音声ファイルの長さを取得
-    path = '/tmp/' + key
-    wr = open(path, 'wb')
-    wr.write(wav)
-    wr.close()
-    wf = wave.open(path, mode='rb')
-    audio_length = int((wf.getnframes() / wf.getframerate()) * 1000)
-
-   # 音声ファイルを S3 バケットに保存する
-   # 音声ファイルの長さをMeatadataで持たせる
+    mp3 = subprocess.run(
+        ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-f', 'wav', '-i', 'pipe:0',
+         '-c:a', 'libmp3lame', '-b:a', '64k', '-f', 'mp3', 'pipe:1'],
+        input=wav,
+        stdout=subprocess.PIPE,
+        check=True,
+    ).stdout
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')
+    key = f'{timestamp}-{uuid.uuid4().hex}.mp3'
     s3.put_object(
-        Bucket= bucket,
-        Body = wav,
-        Key = key,
-        Metadata = {
-        'duration': str(audio_length)
-        }
-    )    
+        Bucket=bucket,
+        Body=mp3,
+        Key=key,
+        ContentType='audio/mpeg',
+        Metadata={'duration': str(audio_length)},
+    )
 
-    os.remove(path)
-
-    # 音声ファイルの長さをレスポンスする
     response = {
-            'Audio-Length': audio_length,
-            'bucket': bucket,
-            'key': key
-        }
+        'Audio-Length': audio_length,
+        'bucket': bucket,
+        'key': key,
+    }
 
     return {
         'statusCode': 200,

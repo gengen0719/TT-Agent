@@ -40,12 +40,12 @@ describe('parseMakeVoiceResponse', () => {
   it('parses a successful response', () => {
     const payload = JSON.stringify({
       statusCode: 200,
-      body: JSON.stringify({ 'Audio-Length': 1234, bucket: 'voice-bucket', key: '20240101000000.wav' }),
+      body: JSON.stringify({ 'Audio-Length': 1234, bucket: 'voice-bucket', key: '20240101000000-example.mp3' }),
     });
     assert.deepEqual(parseMakeVoiceResponse(payload), {
       audioLength: 1234,
       bucket: 'voice-bucket',
-      key: '20240101000000.wav',
+      key: '20240101000000-example.mp3',
     });
   });
 

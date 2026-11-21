@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "make-voice/Dockerfile"
+      - "make-voice/lambda_function.py"
       - ".github/workflows/make-voice-docker-build.yml"
   workflow_dispatch:
 
@@ -32,3 +33,9 @@ jobs:
 
       - name: Smoke test import
         run: docker run --rm --entrypoint python make-voice:ci -c "import voicevox_core, awslambdaric, boto3; print('ok')"
+
+      - name: Smoke test MP3 encoder
+        run: >
+          docker run --rm --entrypoint ffmpeg make-voice:ci
+          -hide_banner -loglevel error -f lavfi -i anullsrc=sample_rate=24000:channel_layout=mono
+          -t 0.1 -c:a libmp3lame -b:a 64k -f mp3 /tmp/smoke.mp3
